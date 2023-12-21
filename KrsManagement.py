@@ -13,7 +13,7 @@ user_data = {
     "202110370311028": {"name": "RAYHAN MUHAMMAD SAFRUDIN", "password": "028", "ipk": 3.5, "selected_courses": []},
     "202110370311161": {"name": "AHMAD RIZKY HAS", "password": "161", "ipk": 4.0, "selected_courses": []},
     "202110370311276": {"name": "FARIS EKA ISWANTO", "password": "276", "ipk": 2.3, "selected_courses": []},
-    "202110370311393": {"name": "MUHAMMAD IBNU", "password": "392", "ipk": 3.3, "selected_courses": []},
+    "202110370311392": {"name": "MUHAMMAD IBNU", "password": "392", "ipk": 3.3, "selected_courses": []},
     "202110370311403": {"name": "MUHAMMAD ARSYAQ FERY", "password": "393", "ipk": 3.6, "selected_courses": []},
     "202110370311405": {"name": "DEVI APRILIANTI", "password": "405", "ipk": 3.5, "selected_courses": []},
     "202110370311407": {"name": "MUHAMMAD NUR LUTHFIA QOLBA", "password": "407", "ipk": 3.7, "selected_courses": []},
@@ -73,6 +73,12 @@ def load_data_from_excel():
     except FileNotFoundError:
         pass
 
+    for username, data in user_data.items():
+        if username not in user_data:
+            user_data[username] = {"name": "", "password": data["password"], "ipk": 0, "selected_courses": []}
+            for course in data["selected_courses"]:
+                checkbox_vars[course] = tk.IntVar()
+
 ##### SKS UPDATE TOTAL FUNC #####
 def update_status_label():
     global label_status, current_user, user_data, selected_courses
@@ -123,9 +129,10 @@ def login():
             entry_username.delete(0, tk.END)
             entry_password.delete(0, tk.END)
     else:
-        label_status.config(text="Login gagal. Coba lagi.")
-        entry_username.delete(0, tk.END)
-        entry_password.delete(0, tk.END)
+        # Create a new entry for the user if not found
+        user_data[username] = {"name": "", "password": password, "ipk": 0, "selected_courses": []}
+        current_user = username
+        show_krs_page(user_data[username]["ipk"])
 
 
 ##### LOGIN PAGE STYLE #####
