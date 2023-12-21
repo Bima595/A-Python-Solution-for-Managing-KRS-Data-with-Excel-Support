@@ -4,35 +4,35 @@ from openpyxl import Workbook, load_workbook
 import time
 
 
-##########  DATA USER  #########
+
+# Data login (contoh)
 user_data = {
-    "202110370311395": {"password": "25286876", "ipk": 3.9, "selected_courses": []},
-    "202110370311393": {"password": "393", "ipk": 3.2, "selected_courses": []},
-
+    "user123": {"password": "pass123", "ipk": 3.8, "selected_courses": []},
+    "22": {"password": "22", "ipk": 3.2, "selected_courses": []},
+    # Add more users with their respective passwords and IPK
 }
 
-########## DATA MATA KULIAH #########
+# Data mata kuliah
 matakuliah = {
-    "Pemrogrman Website": 4,
-    "Kalkulus": 3,
-    "Metode Penelitian": 2,
-    "Pemrogaman Lanjut": 3,
-    "Pemrogaman Mobile": 4,
-    "Pengantar Game": 2,
-    "Jaringan Komputer": 3,
-    "Design Perangkat Lunak": 2,
-    "Basisdata": 3,
-    "Sistem Operasi": 4,
+    "Matkul 1": 4,
+    "Matkul 2": 3,
+    "Matkul 3": 2,
+    "Matkul 4": 3,
+    "Matkul 5": 4,
+    "Matkul 6": 2,
+    "Matkul 7": 3,
+    "Matkul 8": 2,
+    "Matkul 9": 3,
+    "Matkul 10": 4,
 }
 
-########## BATAS IPK #########
+# Data batasan SKS
 batasan_sks_ipk_35 = {
     "min_sks": 20,
     "max_sks_high_ipk": 24
 }
 
 
-########## INISIALISASI DATABASE #########
 def load_data_from_excel():
     global user_data, selected_courses, checkbox_vars
     try:
@@ -59,6 +59,7 @@ def load_data_from_excel():
                     checkbox_vars[course] = tk.IntVar()
 
     except FileNotFoundError:
+        # Handle the case where the Excel file doesn't exist yet
         pass
 
 def update_status_label():
@@ -70,7 +71,6 @@ def update_status_label():
 
 # Initialize root window
 root = tk.Tk()
-style = ttk.Style()
 root.geometry("1275x720+0+0") # menentukan ukuran window aplikasi
 root.resizable(0,0)
 root.title("KRS Universitas Muhammadiyah Malang")
@@ -88,16 +88,18 @@ submit_clicked = False
 
 
 
-########## LOGIN FUNCTION #########
+
 def login():
     global current_user, entry_username, entry_password, label_status, submit_clicked
 
     current_user = None
-    submit_clicked = False  
+    selected_courses = []  # Reset selected_courses on login
+    submit_clicked = False  # Reset submit_clicked on login
+    last_submission_time = 0  # Reset last_submission_time on login
 
 
     if submit_clicked:
-        return  
+        return  # Prevent login after submit without logout
 
     username = entry_username.get()
     password = entry_password.get()
@@ -107,15 +109,15 @@ def login():
         show_krs_page(user_data[username]["ipk"])
     else:
         label_status.config(text="Login gagal. Coba lagi.")
+        # Clear the entry fields for a new login attempt
         entry_username.delete(0, tk.END)
         entry_password.delete(0, tk.END)
 
 title_label = None
 
-
-########## STYLE LOGIN PAGE #########
 def login_page():
     global label_status, root, checkbox_vars, current_user, user_row_counter, selected_courses, submit_clicked, frame_login, entry_username, entry_password, title_label, subtitle_label
+
 
     title_label = tk.Label(root, text="KRS MANAGEMENT INFORMATIKA", font=("Times New Roman", 24), fg="Black")
     title_label.place(relx=0.5, rely=0.2, anchor="center")
@@ -143,19 +145,44 @@ def login_page():
     button_login.grid(row=3, column=0, columnspan=2, pady=20)
     label_status.grid(row=5, column=0, columnspan=2, pady=10)
 
-########## KRS PAGE FUNCTIONS #########
+
+style = ttk.Style()
 row_counter = 3
 calculate_total_sks = lambda: sum([matakuliah[course] for course in selected_courses])
+
 def show_krs_page(ipk):
     global label_status, root, checkbox_vars, current_user, user_row_counter, selected_courses, submit_clicked, frame_krs, title_label, subtitle_label, row_counter
 
+    # Menghapus frame login agar tidak terlihat
     if frame_login:
         frame_login.destroy()
         title_label.destroy()
         subtitle_label.destroy()
 
+    # Destroy widgets using grid_forget to preserve grid configuration
     for widget in root.grid_slaves():
         widget.grid_forget()
+
+
+        # Set styles for labels and buttons
+    frame_krs = tk.Frame(root, bg="#F5F5F5", pady=20, padx=20, bd=10, relief=tk.GROOVE)
+    frame_krs.place(relx=0.5, rely=0.5, anchor="center")
+    frame_krs.grid_columnconfigure(1, weight=1)  # Make the last column (column index 1) expandable
+
+    title_label = ttk.Label(frame_krs, text="KRS MANAGEMENT INFORMATIKA", style="Title.TLabel")
+    title_label.grid(row=0, column=0, columnspan=2)
+
+    subtitle_label = ttk.Label(frame_krs, text="UNIVERSITAS MUHAMMADIYAH MALANG", style="Subtitle.TLabel")
+    subtitle_label.grid(row=1, column=0, columnspan=2)
+
+    label_username = ttk.Label(frame_krs, text=f"NIM: {current_user}", style="Info.TLabel")
+    label_username.grid(row=2, column=0, pady=5, sticky="w")
+
+    label_password = ttk.Label(frame_krs, text=f"PIC: {user_data[current_user]['password']}", style="Info.TLabel")
+    label_password.grid(row=2, column=1, pady=5, sticky="w")
+
+    label_status = ttk.Label(frame_krs, text="Total SKS: 0")
+    label_status.grid(row=1, column=1, pady=10, sticky="e")
 
     selected_courses = user_data[current_user]["selected_courses"]
 
@@ -184,31 +211,12 @@ def show_krs_page(ipk):
         else:
              if course in selected_courses:
                 selected_courses.remove(course)
+        
         selected_courses = [course for course in selected_courses if course is not None]
+
         update_status()
 
     row_counter = 3  # Start with the next row for checkbuttons
-
-
-    ########## STYLE KRS PAGE #########
-    frame_krs = tk.Frame(root, bg="#F5F5F5", pady=20, padx=20, bd=10, relief=tk.GROOVE)
-    frame_krs.place(relx=0.5, rely=0.5, anchor="center")
-    frame_krs.grid_columnconfigure(1, weight=1)  # Make the last column (column index 1) expandable
-
-    title_label = ttk.Label(frame_krs, text="KRS MANAGEMENT INFORMATIKA", style="Title.TLabel")
-    title_label.grid(row=0, column=0, columnspan=2)
-
-    subtitle_label = ttk.Label(frame_krs, text="UNIVERSITAS MUHAMMADIYAH MALANG", style="Subtitle.TLabel")
-    subtitle_label.grid(row=1, column=0, columnspan=2)
-
-    label_username = ttk.Label(frame_krs, text=f"NIM: {current_user}", style="Info.TLabel")
-    label_username.grid(row=2, column=0, pady=5, sticky="w")
-
-    label_password = ttk.Label(frame_krs, text=f"PIC: {user_data[current_user]['password']}", style="Info.TLabel")
-    label_password.grid(row=2, column=1, pady=5, sticky="w")
-
-    label_status = ttk.Label(frame_krs, text="Total SKS: 0")
-    label_status.grid(row=2, column=1, pady=10, sticky="e")
 
     for mata_kuliah, sks in matakuliah.items():
         var = tk.IntVar()
@@ -221,6 +229,9 @@ def show_krs_page(ipk):
         checkbox_vars[mata_kuliah] = var
         row_counter += 1
 
+        
+
+    # Submit button with functionality
     button_submit = ttk.Button(frame_krs, text="Submit", command=submit, style="Button.TButton")
     button_submit.grid(row=row_counter, column=0, pady=20)
 
@@ -233,34 +244,38 @@ def show_krs_page(ipk):
     style.configure("Info.TLabel", font=("Helvetica", 14), background="#F5F5F5")
     style.configure("Button.TButton", font=("Helvetica", 14), background="#4CAF50", borderwidth=1, relief=tk.SOLID)
 
-
-
-########## SUBMIT FUNCTIONS #########
 last_submission_time = 0
-submission_cooldown = 60 
+
+# Time delay between submissions (in seconds)
+submission_cooldown = 60  # Adjust this value as needed
+
 def submit():
     global user_row_counter, selected_courses, submit_clicked, last_submission_time
 
     current_time = time.time()
+
+    # Check if the submission cooldown has passed
     if current_time - last_submission_time < submission_cooldown:
         label_status.config(text=f"Harap tunggu {int(submission_cooldown - (current_time - last_submission_time))} detik sebelum submit lagi.")
         return
 
     last_submission_time = current_time
     if submit_clicked:
-        return  
+        return  # Prevent multiple submissions without logout
 
-    submit_clicked = True
+    submit_clicked = True  # Set submit_clicked to True
 
-    # masuk data ke variable
+    # Store selected courses in user_data
     user_data[current_user]["selected_courses"] = selected_courses
 
+    # Load existing workbook or create a new one if it doesn't exist
     try:
         wb = load_workbook("KrsDatabase.xlsx")
     except FileNotFoundError:
         wb = Workbook()
 
-    ws = wb.active ##active workbook
+    # Select the sheet for all users or create a new one
+    ws = wb.active
 
     # Find the row with the same username if it exists
     existing_row = None
@@ -269,7 +284,6 @@ def submit():
             existing_row = row[0].row
             break
 
-    ########## CHECK ROW DI EXCEL #########
     if existing_row is not None:
         # Update the existing row with the new data
         for i in range(10):
@@ -280,8 +294,11 @@ def submit():
         ws.cell(row=existing_row, column=13, value=calculate_total_sks())  # Total SKS
         label_status.config(text="Anda Telah Berhasil Melakukan Krs Database")
     else:
+        # If the user's row counter is not set, find the next available row
         if current_user not in user_row_counter:
-            user_row_counter[current_user] = ws.max_row + 1             ########## CHECK ROW DI EXCEL ADA ENGGAK #########
+            user_row_counter[current_user] = ws.max_row + 1
+
+        # Write data to Excel file in the next available row
         data = [current_user, user_data[current_user]["password"]]
         for i in range(10):
             if i < len(selected_courses):
@@ -293,6 +310,7 @@ def submit():
         label_status.config(text="Anda Telah Berhasil Melakukan Krs Database")
         user_row_counter[current_user] += 1
 
+    # Save workbook to file
     wb.save("KrsDatabase.xlsx")
 
 def logout():
@@ -304,9 +322,6 @@ def logout():
     for widget in root.grid_slaves():
         widget.grid_forget()
     login_page()
-
-    if frame_krs:
-        frame_krs.destroy()
 
 calculate_total_sks = lambda: sum(matakuliah.get(course, 0) for course in selected_courses)
 
